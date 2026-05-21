@@ -300,6 +300,35 @@
         let allCommands = [];
         let groupedCommands = {};
 
+        // Hardcoded backup data (used if fetch fails on hosting)
+        const FALLBACK_DATA = {
+            "commands": [
+                {"name": "ra1d", "description": "[deprecated] self explanatory.", "category": "Raiding"},
+                {"name": "interaction-ra1d", "description": "interaction raiding.", "category": "Raiding"},
+                {"name": "custom_ra1d", "description": "open the custom ra1d message panel", "category": "Raiding"},
+                {"name": "thug", "description": "thug the server!!", "category": "Raiding"},
+                {"name": "blame", "description": "blame a user for raiding.", "category": "Raiding"},
+                {"name": "say", "description": "say something through the bot.", "category": "Raiding"},
+                {"name": "spam", "description": "spam something.", "category": "Raiding"},
+                {"name": "filespam", "description": "spam a file attachment.", "category": "Raiding"},
+                {"name": "info", "description": "info.", "category": "Raiding"},
+                {"name": "ad", "description": "send the zne advertisement", "category": "Advertisement"},
+                {"name": "lag", "description": "crash peoples phones for fun.", "category": "Lag"},
+                {"name": "dmanon", "description": "dm someone.", "category": "Direct Messages"},
+                {"name": "dmflood", "description": "Send 20 DMs to a user.", "category": "Direct Messages"},
+                {"name": "dmblacklist", "description": "blacklist yourself from dms", "category": "Direct Messages"},
+                {"name": "x-blacklist-server", "description": "blacklist server", "category": "Owner"},
+                {"name": "x-blacklist-user", "description": "blacklist user", "category": "Owner"},
+                {"name": "x-setmessage", "description": "set global msg", "category": "Owner"},
+                {"name": "x-reload-cogs", "description": "reload cogs", "category": "Owner"},
+                {"name": "x-leaveall", "description": "leave servers", "category": "Owner"},
+                {"name": "fakenitro", "description": "send a ULTRA realistic nitro embed.", "category": "Fake"},
+                {"name": "fakemessage", "description": "send a fake message (realistic)", "category": "Fake"},
+                {"name": "ghostping", "description": "ghostping a user or everyone.", "category": "Ghost"},
+                {"name": "ghostsay", "description": "say something then delete", "category": "Ghost"}
+            ]
+        };
+
         async function loadCommands() {
             const container = document.getElementById('commandsContainer');
 
@@ -309,26 +338,20 @@
 
                 const data = await response.json();
                 allCommands = data.commands || [];
-
-                // Group by category
-                groupedCommands = {};
-                allCommands.forEach(cmd => {
-                    const cat = cmd.category || 'Other';
-                    if (!groupedCommands[cat]) groupedCommands[cat] = [];
-                    groupedCommands[cat].push(cmd);
-                });
-
-                renderCommands();
             } catch (error) {
-                container.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-exclamation-triangle" style="font-size:32px; margin-bottom:12px; color:#ff4757;"></i>
-                        <p>Failed to load commands.</p>
-                        <p style="font-size:13px; margin-top:8px;">Make sure <code>commands.json</code> exists in the same folder.</p>
-                    </div>
-                `;
-                console.error('Error loading commands:', error);
+                console.warn('Using hardcoded fallback commands (fetch failed):', error);
+                allCommands = FALLBACK_DATA.commands || [];
             }
+
+            // Group by category
+            groupedCommands = {};
+            allCommands.forEach(cmd => {
+                const cat = cmd.category || 'Other';
+                if (!groupedCommands[cat]) groupedCommands[cat] = [];
+                groupedCommands[cat].push(cmd);
+            });
+
+            renderCommands();
         }
 
         function renderCommands(filteredCommands = null) {
