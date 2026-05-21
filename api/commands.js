@@ -2,9 +2,22 @@ import { Redis } from '@upstash/redis';
 
 // Upstash Redis credentials are automatically injected by Vercel
 // when you connect Upstash from the Marketplace (UPSTASH_REDIS_REST_URL + TOKEN)
-const redis = Redis.fromEnv();
+let redis = null;
+
+function getRedis() {
+  if (!redis) {
+    redis = Redis.fromEnv();
+  }
+  return redis;
+}
 
 const SECRET = process.env.COMMANDS_SECRET;
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+function isRedisConfigured() {
+  return UPSTASH_URL && UPSTASH_TOKEN;
+}
 
 export default async function handler(req, res) {
   // CORS headers
@@ -16,10 +29,16 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  if (!isRedisConfigured()) {
+    const msg = 'Upstash Redis is not configured. Go to Storage → Upstash, create/connect a Redis database, then redeploy.';
+    console.error(msg);
+    return res.status(500).json({ error: msg });
+  }
+
   // ==================== GET ====================
   if (req.method === 'GET') {
     try {
-      const data = await redis.get('zne-commands');
+      const data = await getRedis().get('zne-commands');
 
       if (data && Array.isArray(data.commands)) {
         return res.status(200).json(data);
@@ -29,7 +48,10 @@ export default async function handler(req, res) {
       return res.status(200).json({ commands: [] });
     } catch (error) {
       console.error('Redis GET error:', error);
-      return res.status(500).json({ error: 'Failed to fetch commands from Redis' });
+      return res.status(500).json({ 
+        error: 'Failed to fetch commands from Redis', 
+        details: error?.message || String(error) 
+      });
     }
   }
 
@@ -46,7 +68,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      await redis.set('zne-commands', { commands });
+      await getRedis().set('zne-commands', { commands });
 
       return res.status(200).json({
         success: true,
@@ -55,7 +77,10 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error('Redis SET error:', error);
-      return res.status(500).json({ error: 'Failed to save commands to Redis' });
+      return res.status(500).json({ 
+        error: 'Failed to save commands to Redis', 
+        details: error?.message || String(error) 
+      });
     }
   }
 
