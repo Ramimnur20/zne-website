@@ -821,6 +821,31 @@
             }, 16);
         }
 
+        // Live user count from Discord invite (for the "Active Users" stat)
+        let zneUserCount = 89400; // fallback (89.4k)
+
+        async function fetchRealUserCount() {
+            try {
+                const response = await fetch('https://discord.com/api/v10/invites/QKSsF6tWpF?with_counts=true');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+
+                if (typeof data.approximate_member_count === 'number' && data.approximate_member_count > 0) {
+                    zneUserCount = data.approximate_member_count;
+
+                    // Immediately show the accurate number (formatted) before the user scrolls
+                    const usersEl = document.getElementById('users');
+                    if (usersEl) {
+                        const formatted = (zneUserCount / 1000).toFixed(1);
+                        usersEl.textContent = formatted + 'k';
+                    }
+                }
+            } catch (err) {
+                console.warn('[ZNE] Could not fetch live member count:', err.message || err);
+                // keep the fallback value
+            }
+        }
+
         // Initialize counters on scroll
         function initCounters() {
             const stats = document.querySelectorAll('.stat-number');
@@ -830,7 +855,8 @@
                 if (entries[0].isIntersecting && !animated) {
                     animated = true;
                     animateCounter(document.getElementById('servers'), 20, '');
-                    animateCounter(document.getElementById('users'), 500, '');
+                    const usersTarget = zneUserCount / 1000;
+                    animateCounter(document.getElementById('users'), usersTarget, 'k');
                     animateCounter(document.getElementById('uptime'), 99.9, '%');
                 }
             });
@@ -935,6 +961,7 @@
 
         // Initialize everything
         function init() {
+            fetchRealUserCount(); // fetch live Discord member count for the users stat
             initCounters();
             initSmoothScroll();
             initTerminal();
