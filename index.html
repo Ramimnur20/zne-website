@@ -822,7 +822,14 @@
         }
 
         // Live user count from Discord invite (for the "Active Users" stat)
-        let zneUserCount = 89400; // fallback (89.4k)
+        let zneUserCount = 89400; // fallback (~89.4k)
+
+        function formatUserCount(count) {
+            if (count >= 1000) {
+                return (count / 1000).toFixed(1) + 'k';
+            }
+            return Math.floor(count).toString();
+        }
 
         async function fetchRealUserCount() {
             try {
@@ -833,11 +840,10 @@
                 if (typeof data.approximate_member_count === 'number' && data.approximate_member_count > 0) {
                     zneUserCount = data.approximate_member_count;
 
-                    // Immediately show the accurate number (formatted) before the user scrolls
+                    // Immediately show the accurate formatted number
                     const usersEl = document.getElementById('users');
                     if (usersEl) {
-                        const formatted = (zneUserCount / 1000).toFixed(1);
-                        usersEl.textContent = formatted + 'k';
+                        usersEl.textContent = formatUserCount(zneUserCount);
                     }
                 }
             } catch (err) {
@@ -855,8 +861,12 @@
                 if (entries[0].isIntersecting && !animated) {
                     animated = true;
                     animateCounter(document.getElementById('servers'), 20, '');
-                    const usersTarget = zneUserCount / 1000;
-                    animateCounter(document.getElementById('users'), usersTarget, 'k');
+                    if (zneUserCount >= 1000) {
+                        const usersTarget = zneUserCount / 1000;
+                        animateCounter(document.getElementById('users'), usersTarget, 'k');
+                    } else {
+                        animateCounter(document.getElementById('users'), zneUserCount, '');
+                    }
                     animateCounter(document.getElementById('uptime'), 99.9, '%');
                 }
             });
