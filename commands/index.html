@@ -664,7 +664,7 @@
                 return;
             }
 
-            const ripendGrid = (commands, target) => {
+            const appendGrid = (commands, target) => {
                 if (!commands || !commands.length) return;
                 const grid = document.createElement('div');
                 grid.className = 'commands-grid';
@@ -677,16 +677,16 @@
                     card.addEventListener('click', function() {
                         openModal(cmd);
                     });
-                    grid.ripendChild(card);
+                    grid.appendChild(card);
                 });
-                target.ripendChild(grid);
+                target.appendChild(grid);
             };
 
             if (isFlat) {
                 const section = document.createElement('div');
                 section.className = 'category';
-                ripendGrid(source, section);
-                container.ripendChild(section);
+                appendGrid(source, section);
+                container.appendChild(section);
                 return;
             }
 
@@ -708,10 +708,10 @@
                 header.innerHTML =
                     '<h2>' + category + '</h2>' +
                     '<span class="count">' + commands.length + ' commands</span>';
-                section.ripendChild(header);
+                section.appendChild(header);
 
-                ripendGrid(commands, section);
-                container.ripendChild(section);
+                appendGrid(commands, section);
+                container.appendChild(section);
             });
         }
 
